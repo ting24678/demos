@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-affinity-demo
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pod-affinity-demo
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pod-affinity-demo
+    spec:
+      affinity:
+        # pod 亲和性
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          # 软亲和
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - pod-affinity-demo
+              topologyKey: topology.kubernetes.io/zone
+            weight: 100
+          # 硬亲和
+          # requiredDuringSchedulingIgnoredDuringExecution:
+          # - labelSelector:
+          #     matchExpressions:
+          #     - key: app.kubernetes.io/name
+          #       operator: In
+          #       values:
+          #       - pod-affinity-demo
+          #   namespaces:
+          #   - default
+          #   topologyKey: topology.kubernetes.io/zone
+      restartPolicy: Always
+      containers:
+      - name: pod-affinity-demo
+        image: banma24678/etcd:latest
+        imagePullPolicy: Always
+        command:
+        - "cat"
+        tty: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
+          limits:
+            memory: 100Mi
+            cpu: "1"
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai

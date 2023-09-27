@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-affinity-demo
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-affinity-demo
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: node-affinity-demo
+    spec:
+      affinity:
+        # 节点亲和性
+        nodeAffinity:
+          # 硬亲和
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - deb12-k8s127-n-01
+                - deb12-k8s127-n-02
+          # # 软亲和
+          # preferredDuringSchedulingIgnoredDuringExecution:
+          # - preference:
+          #     matchExpressions:
+          #     - key: kubernetes.io/hostname
+          #       operator: In
+          #       values:
+          #       - "deb12-k8s127-n-01"
+          #       - "deb12-k8s127-n-02"
+          #   weight: 100
+      restartPolicy: Always
+      containers:
+      - name: node-affinity-demo
+        image: banma24678/etcd:latest
+        imagePullPolicy: Always
+        command:
+        - "cat"
+        tty: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
+          limits:
+            memory: 100Mi
+            cpu: "1"
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
